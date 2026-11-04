@@ -21,39 +21,29 @@ Laravel is a web application framework with expressive, elegant syntax. We belie
 
 Laravel is accessible, powerful, and provides tools required for large, robust applications.
 
-## Learning Laravel
+# Diễn đàn hỏi đáp học thuật cho sinh viên khoa
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+Niên luận: hệ thống hỏi đáp riêng của khoa, thay cho việc hỏi rải rác trong nhóm chat.
+Công nghệ: Laravel 12, MySQL (full-text search), Blade, Tailwind CSS.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Chức năng
+- Đăng câu hỏi, trả lời, bình luận theo môn học
+- Bình chọn, chọn câu trả lời được chấp nhận
+- Tìm kiếm full-text theo từ khóa, lọc theo môn và thẻ, sắp xếp theo mới nhất/nhiều phiếu/nhiều lượt xem
+- Gợi ý câu hỏi tương tự khi đang soạn câu hỏi mới
+- Chống gian lận bình chọn (không tự bầu, giới hạn tần suất, phát hiện bầu dồn, phiếu nghi vấn không tính điểm)
+- Điểm uy tín thành viên và lịch sử điểm
+- Báo cáo vi phạm, kiểm duyệt nội dung
+- Thống kê câu hỏi theo môn, người đóng góp nổi bật (dùng SQL view)
 
-## Laravel Sponsors
+## Cài đặt
+1. Bật MySQL, tạo database `forum_khoa` (utf8mb4_unicode_ci)
+2. `composer install` và `npm install`
+3. `copy .env.example .env` rồi `php artisan key:generate`
+4. `php artisan migrate --seed`
+5. `npm run build`, sau đó `php artisan serve` và mở http://127.0.0.1:8000
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
-
-### Premium Partners
-
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
-
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Tài khoản thử (mật khẩu: password)
+- Quản trị: admin@forum.test
+- Kiểm duyệt viên: mod@forum.test
+- Sinh viên: a@forum.test, b@forum.test
