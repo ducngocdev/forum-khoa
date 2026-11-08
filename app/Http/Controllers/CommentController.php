@@ -12,4 +12,11 @@ class CommentController extends Controller
         Forum::resolve($d['type'], $d['id'])->comments()->create(['user_id' => $r->user()->id, 'body' => $d['body']]);
         return back();
     }
+
+    public function destroy(Request $r, \App\Models\Comment $comment)
+    {
+        abort_unless($comment->user_id === $r->user()->id, 403);
+        $comment->update(['is_hidden' => true]);
+        return back()->with('status', 'Đã thu hồi bình luận.');
+    }
 }

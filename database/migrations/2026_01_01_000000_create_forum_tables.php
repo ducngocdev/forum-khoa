@@ -24,7 +24,9 @@ return new class extends Migration {
             $t->integer('score')->default(0);
             $t->boolean('is_hidden')->default(false);
             $t->timestamps();
-            $t->fullText(['title', 'body']);
+            if (Schema::getConnection()->getDriverName() === 'mysql') {
+                $t->fullText(['title', 'body']);
+            }
         });
         Schema::create('answers', function (Blueprint $t) {
             $t->id();

@@ -1,7 +1,7 @@
 <?php
 namespace App\Services;
 
-use App\Models\{Answer, Question, Vote, User};
+use App\Models\{Answer, Comment, Question, ReputationLog, Vote, User};
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
@@ -22,6 +22,11 @@ class VoteService
 
     public static function cast(User $voter, Model $votable, int $value): void
     {
+        if ($votable instanceof Answer || $votable instanceof Comment) {
+            self::castHelpfulVote($voter, $votable, $value);
+            return;
+        }
+
         $author = $votable->user;
         if ($author->id === $voter->id) throw new \DomainException('Bạn không thể bình chọn bài của chính mình.');
         if ($value < 0 && $voter->reputation < self::MIN_REP_DOWNVOTE)
@@ -46,6 +51,49 @@ class VoteService
             $votable->increment('score', $newValue - $oldValue);
             ReputationService::give($author, $newPts - $oldPts, 'vote', $votable);
         });
+    }
+
+    private static function castHelpfulVote(User $voter, Model $votable, int $value): void
+    {
+        $isStudent = strtolower((string) $voter->academic_title) === 'sinh viên'
+            || (!$voter->academic_title && $voter->role === 'student');
+        if ($isStudent) {
+            throw new \DomainException('Chỉ giáo viên, giảng viên và thành viên đã tốt nghiệp mới có thể đánh giá.');
+        }
+
+        $author = $votable->user;
+        if (!$author || $author->id === $voter->id) {
+            throw new \DomainException('Bạn không thể tự đánh giá nội dung của mình.');
+        }
+
+        DB::transaction(function () use ($voter, $votable, $value, $author) {
+            $key = ['user_id' => $voter->id, 'votable_type' => $votable::class, 'votable_id' => $votable->id];
+            $vote = Vote::where($key)->first();
+
+            if ($vote && $vote->value === $value) {
+                $vote->delete();
+            } else {
+                Vote::updateOrCreate($key, ['value' => $value, 'is_suspicious' => false]);
+            }
+
+            self::syncHelpfulReputation($author, $votable);
+        });
+    }
+
+    private static function syncHelpfulReputation(User $author, Model $votable): void
+    {
+        $yesCount = Vote::where('votable_type', $votable::class)
+            ->where('votable_id', $votable->id)
+            ->where('value', 1)
+            ->where('is_suspicious', false)
+            ->count();
+        $awarded = ReputationLog::where('user_id', $author->id)
+            ->where('action', 'helpful_vote')
+            ->where('source_type', $votable::class)
+            ->where('source_id', $votable->id)
+            ->sum('points');
+        $target = intdiv($yesCount, 5);
+        ReputationService::give($author, $target - $awarded, 'helpful_vote', $votable);
     }
 
     private static function points(Model $m, int $value): int

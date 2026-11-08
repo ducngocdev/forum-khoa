@@ -29,6 +29,7 @@ class DatabaseSeeder extends Seeder
             ['code' => $subject[0]],
             ['name' => $subject[1]]
         ));
+        $this->call(CurriculumSubjectSeeder::class);
 
         $tags = collect([
             ['php', 'php'],

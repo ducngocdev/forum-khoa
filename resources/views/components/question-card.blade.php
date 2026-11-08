@@ -55,18 +55,7 @@
             </div>
 
             <!-- Tác giả & thời gian -->
-            <div class="flex items-center gap-2 text-xs text-gray-500 ml-auto">
-                <div class="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-[11px] uppercase shadow-sm">
-                    {{ mb_substr($question->user->name ?? 'U', 0, 1) }}
-                </div>
-                <a href="{{ route('users.show', $question->user) }}" class="font-medium text-gray-700 hover:text-blue-600">
-                    {{ $question->user->name }}
-                </a>
-                <span class="text-gray-400">({{ $question->user->reputation ?? 0 }})</span>
-                <span class="text-gray-400">·</span>
-                <span title="{{ $question->created_at }}">{{ $question->created_at->diffForHumans() }}</span>
-            </div>
+            <x-user-meta :user="$question->user" :time="$question->created_at->diffForHumans()" class="ml-auto" />
         </div>
     </div>
 </div>
-

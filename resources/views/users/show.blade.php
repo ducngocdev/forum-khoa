@@ -1,9 +1,8 @@
 <x-app-layout>
   <x-slot name="header">
-    <div class="flex items-center gap-3">
-      <div class="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-lg uppercase shadow-sm">
-        {{ mb_substr($user->name ?? 'U', 0, 1) }}
-      </div>
+    <div class="flex items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+      <x-user-avatar :user="$user" size="w-12 h-12" text-size="text-lg" class="shadow-sm" />
       <div>
         <div class="flex items-center gap-2">
           <h2 class="text-xl font-bold text-gray-900 leading-tight">{{ $user->name }}</h2>
@@ -14,11 +13,54 @@
           @endif
         </div>
         <p class="text-xs text-gray-500 mt-0.5">Tham gia từ {{ $user->created_at ? $user->created_at->format('d/m/Y') : 'N/A' }}</p>
+        <p class="text-xs text-gray-600 mt-1">{{ collect([$user->academic_title, $user->class_name, $user->study_year])->filter()->join(' · ') }}</p>
       </div>
+      </div>
+      @auth
+        @if(auth()->id() === $user->id)
+          <a href="{{ route('profile.edit') }}" class="inline-flex items-center px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700">
+            Chỉnh sửa hồ sơ
+          </a>
+        @endif
+      @endauth
     </div>
   </x-slot>
 
   <div class="max-w-5xl mx-auto py-8 px-4 sm:px-6 space-y-6">
+    @if(session('status') === 'profile-updated')
+      <div class="rounded-lg bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-700">
+        Đã lưu thông tin hồ sơ thành công.
+      </div>
+    @endif
+
+    <section class="bg-white border border-gray-100 rounded-xl shadow-sm p-6">
+      <div class="flex items-center justify-between gap-3 mb-4">
+        <h3 class="font-bold text-gray-900">Thông tin cá nhân</h3>
+        @if(!$user->academic_title && !$user->class_name && !$user->study_year && !$user->bio)
+          <span class="text-xs text-gray-500">Chưa cập nhật</span>
+        @endif
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div class="rounded-lg bg-gray-50 p-3">
+          <div class="text-xs text-gray-500">Vai trò / học vị</div>
+          <div class="mt-1 text-sm font-semibold text-gray-900">{{ $user->academic_title ?: 'Chưa cập nhật' }}</div>
+        </div>
+        <div class="rounded-lg bg-gray-50 p-3">
+          <div class="text-xs text-gray-500">Lớp / đơn vị</div>
+          <div class="mt-1 text-sm font-semibold text-gray-900">{{ $user->class_name ?: 'Không áp dụng' }}</div>
+        </div>
+        <div class="rounded-lg bg-gray-50 p-3">
+          <div class="text-xs text-gray-500">Kinh nghiệm</div>
+          <div class="mt-1 text-sm font-semibold text-gray-900">{{ $user->study_year ?: 'Chưa cập nhật' }}</div>
+        </div>
+      </div>
+      @if($user->bio)
+        <div class="mt-4 pt-4 border-t border-gray-100">
+          <div class="text-xs text-gray-500">Giới thiệu bản thân</div>
+          <p class="mt-1 text-sm text-gray-700 whitespace-pre-line">{{ $user->bio }}</p>
+        </div>
+      @endif
+    </section>
     <!-- Hàng thống kê cá nhân -->
     <div class="grid sm:grid-cols-3 gap-4">
       <div class="bg-white border border-gray-100 rounded-xl p-5 shadow-sm flex items-center gap-4">
@@ -76,6 +118,37 @@
           </div>
         @empty
           <p class="text-sm text-gray-500 py-3">Thành viên này chưa đăng câu hỏi nào.</p>
+        @endforelse
+      </div>
+    </section>
+
+    <section class="bg-white border border-gray-100 rounded-xl shadow-sm p-6">
+      <h3 class="text-base font-bold text-gray-900 mb-4 pb-2 border-b border-gray-100">Lịch sử trả lời</h3>
+      <div class="divide-y divide-gray-100">
+        @forelse($answers as $answer)
+          <div class="py-3 flex items-center justify-between gap-4">
+            <a href="{{ route('questions.show', $answer->question) }}" class="text-sm font-semibold text-gray-800 hover:text-blue-600">{{ $answer->question->title }}</a>
+            <span class="text-xs text-gray-400 shrink-0">{{ $answer->created_at->diffForHumans() }}</span>
+          </div>
+        @empty
+          <p class="text-sm text-gray-500 py-3">Thành viên này chưa trả lời câu hỏi nào.</p>
+        @endforelse
+      </div>
+    </section>
+
+    <section class="bg-white border border-gray-100 rounded-xl shadow-sm p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-base font-bold text-gray-900">Sách đang đăng</h3>
+        <a href="{{ route('books.index') }}" class="text-sm text-blue-600 hover:underline">Xem chợ sách</a>
+      </div>
+      <div class="grid sm:grid-cols-2 gap-3">
+        @forelse($books as $book)
+          <div class="border border-gray-100 rounded-lg p-3">
+            <div class="font-semibold text-sm text-gray-900">{{ $book->title }}</div>
+            <div class="text-xs text-gray-500 mt-1">{{ $book->type === 'giveaway' ? 'Cho tặng' : number_format($book->price ?? 0) . ' đ' }}</div>
+          </div>
+        @empty
+          <p class="text-sm text-gray-500">Chưa đăng sách nào.</p>
         @endforelse
       </div>
     </section>

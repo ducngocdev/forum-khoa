@@ -9,7 +9,7 @@ class VoteController extends Controller
 {
     public function store(Request $r)
     {
-        $d = $r->validate(['type' => 'required|in:question,answer', 'id' => 'required|integer', 'value' => 'required|in:1,-1']);
+        $d = $r->validate(['type' => 'required|in:question,answer,comment', 'id' => 'required|integer', 'value' => 'required|in:1,-1']);
         try {
             VoteService::cast($r->user(), Forum::resolve($d['type'], $d['id']), (int) $d['value']);
         } catch (\DomainException $e) {

@@ -12,7 +12,15 @@ class QuestionController extends Controller
     public function index(Request $r)
     {
         $q = Question::with(['user', 'subject', 'tags'])->withCount('answers')->where('is_hidden', false);
-        if ($s = trim((string) $r->q)) $q->whereRaw(self::FT, [$s])->orderByRaw(self::FT . ' DESC', [$s]);
+        if ($s = trim((string) $r->q)) {
+            if ($q->getModel()->getConnection()->getDriverName() === 'mysql') {
+                $q->whereRaw(self::FT, [$s])->orderByRaw(self::FT . ' DESC', [$s]);
+            } else {
+                $term = '%' . $s . '%';
+                $q->where(fn ($query) => $query->where('title', 'like', $term)->orWhere('body', 'like', $term))
+                    ->latest();
+            }
+        }
         else {
             match ($r->sort) {
                 'votes' => $q->orderByDesc('score'),
@@ -28,7 +36,12 @@ class QuestionController extends Controller
             'subjects' => Subject::orderBy('name')->get(),
             'tags' => Tag::orderBy('name')->get(),
             'popularTags' => Tag::withCount('questions')->orderByDesc('questions_count')->limit(10)->get(),
-            'topUsers' => \Illuminate\Support\Facades\DB::table('v_top_contributors')->orderByDesc('reputation')->limit(5)->get(),
+            'topUsers' => \Illuminate\Support\Facades\DB::table('v_top_contributors')
+                ->leftJoin('users as contributor', 'contributor.id', '=', 'v_top_contributors.id')
+                ->select('v_top_contributors.*', 'contributor.avatar_path')
+                ->orderByDesc('v_top_contributors.reputation')
+                ->limit(5)
+                ->get(),
         ]);
     }
 
@@ -62,12 +75,26 @@ class QuestionController extends Controller
         return view('questions.show', compact('question', 'answers'));
     }
 
+    public function destroy(Request $r, Question $question)
+    {
+        abort_unless($question->user_id === $r->user()->id, 403);
+        $question->update(['is_hidden' => true]);
+        return redirect()->route('questions.index')->with('status', 'Đã thu hồi câu hỏi.');
+    }
+
     // Gợi ý câu hỏi tương tự khi đang gõ tiêu đề
     public function similar(Request $r)
     {
         $t = trim((string) $r->query('title', ''));
         if (mb_strlen($t) < 4) return response()->json([]);
-        $rows = Question::where('is_hidden', false)->whereRaw(self::FT, [$t])->limit(5)->get(['id', 'title']);
+        $query = Question::where('is_hidden', false);
+        if (Question::query()->getModel()->getConnection()->getDriverName() === 'mysql') {
+            $query->whereRaw(self::FT, [$t]);
+        } else {
+            $term = '%' . $t . '%';
+            $query->where(fn ($q) => $q->where('title', 'like', $term)->orWhere('body', 'like', $term));
+        }
+        $rows = $query->limit(5)->get(['id', 'title']);
         return response()->json($rows->map(fn ($q) => ['title' => $q->title, 'url' => route('questions.show', $q)]));
     }
 }

@@ -1,21 +1,53 @@
-{{-- Bình chọn + báo cáo. Biến: $type (question|answer|comment), $model --}}
-<div class="flex items-center gap-4 text-sm">
-  @if($type !== 'comment')
-  <form method="POST" action="{{ route('votes.store') }}" class="flex items-center gap-1">@csrf
-    <input type="hidden" name="type" value="{{ $type }}"><input type="hidden" name="id" value="{{ $model->id }}">
-    <button name="value" value="1" title="Hữu ích" class="px-2 border rounded hover:bg-gray-100">▲</button>
-    <span class="w-8 text-center font-semibold">{{ $model->score }}</span>
-    <button name="value" value="-1" title="Chưa hữu ích" class="px-2 border rounded hover:bg-gray-100">▼</button>
+@props(['voteOnly' => false, 'reportOnly' => false])
+
+@if(!$reportOnly && $type === 'question')
+  <form method="POST" action="{{ route('votes.store') }}" class="{{ $voteOnly ? 'vote-stack' : 'vote-inline' }}">
+    @csrf
+    <input type="hidden" name="type" value="{{ $type }}">
+    <input type="hidden" name="id" value="{{ $model->id }}">
+    <button name="value" value="1" aria-label="Tăng điểm câu hỏi" class="vote-button">
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m5 15 7-7 7 7"/></svg>
+    </button>
+    <span class="vote-score">{{ $model->score }}</span>
+    <button name="value" value="-1" aria-label="Giảm điểm câu hỏi" class="vote-button">
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7"/></svg>
+    </button>
   </form>
-  @endif
-  @auth
-  <details>
-    <summary class="cursor-pointer text-gray-500">Báo cáo</summary>
-    <form method="POST" action="{{ route('reports.store') }}" class="mt-1 flex gap-1">@csrf
+@elseif(!$reportOnly && !$voteOnly)
+  @php
+    $isStudent = auth()->check() && (strtolower((string) auth()->user()->academic_title) === 'sinh viên' || (!auth()->user()->academic_title && auth()->user()->role === 'student'));
+    $yesVotes = $model->votes()->with('user')->where('value', 1)->get();
+    $noVotes = $model->votes()->with('user')->where('value', -1)->get();
+  @endphp
+  <div class="usefulness">
+    <span class="usefulness__label">Hữu ích?</span>
+    <form method="POST" action="{{ route('votes.store') }}" class="usefulness__form">
+      @csrf
       <input type="hidden" name="type" value="{{ $type }}"><input type="hidden" name="id" value="{{ $model->id }}">
-      <input name="reason" required minlength="5" placeholder="Lý do (spam, sai chủ đề, xúc phạm…)" class="border rounded px-2 py-1 text-sm">
-      <button class="px-2 border rounded">Gửi</button>
+      <button name="value" value="1" class="usefulness__button usefulness__button--yes" @disabled($isStudent || !auth()->check()) aria-label="Đánh giá Yes">
+        <span aria-hidden="true">👍</span> Yes <strong>{{ $yesVotes->count() }}</strong>
+      </button>
+      <button name="value" value="-1" class="usefulness__button usefulness__button--no" @disabled($isStudent || !auth()->check()) aria-label="Đánh giá No">
+        <span aria-hidden="true">👎</span> No <strong>{{ $noVotes->count() }}</strong>
+      </button>
+    </form>
+    <details class="reviewers">
+      <summary>Xem người đã đánh giá</summary>
+      <div class="reviewers__panel">
+        <div><strong>Yes:</strong> @forelse($yesVotes as $vote)<a href="{{ route('users.show', $vote->user) }}">{{ $vote->user->name }}</a>{{ !$loop->last ? ', ' : '' }}@empty Chưa có @endforelse</div>
+        <div><strong>No:</strong> @forelse($noVotes as $vote)<a href="{{ route('users.show', $vote->user) }}">{{ $vote->user->name }}</a>{{ !$loop->last ? ', ' : '' }}@empty Chưa có @endforelse</div>
+      </div>
+    </details>
+  </div>
+@endif
+
+@if((!$voteOnly || $reportOnly) && auth()->check())
+  <details class="report-action">
+    <summary>Báo cáo</summary>
+    <form method="POST" action="{{ route('reports.store') }}">@csrf
+      <input type="hidden" name="type" value="{{ $type }}"><input type="hidden" name="id" value="{{ $model->id }}">
+      <input name="reason" required minlength="5" placeholder="Lý do báo cáo">
+      <button>Gửi</button>
     </form>
   </details>
-  @endauth
-</div>
+@endif

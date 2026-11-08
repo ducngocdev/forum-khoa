@@ -35,12 +35,14 @@ Công nghệ: Laravel 12, MySQL (full-text search), Blade, Tailwind CSS.
 - Điểm uy tín thành viên và lịch sử điểm
 - Báo cáo vi phạm, kiểm duyệt nội dung
 - Thống kê câu hỏi theo môn, người đóng góp nổi bật (dùng SQL view)
+- Hồ sơ cá nhân có ảnh đại diện, vai trò/học vị, lớp, năm học, giới thiệu và lịch sử hoạt động
+- Chợ sách cũ để thành viên đăng bán hoặc cho tặng, tìm kiếm và lọc theo hình thức; ảnh sách tùy chọn (JPG, PNG, GIF, WEBP, tối đa 5MB)
 
 ## Cài đặt
 1. Bật MySQL, tạo database `forum_khoa` (utf8mb4_unicode_ci)
 2. `composer install` và `npm install`
 3. `copy .env.example .env` rồi `php artisan key:generate`
-4. `php artisan migrate --seed`
+4. `php artisan migrate --seed` và `php artisan storage:link`
 5. `npm run build`, sau đó `php artisan serve` và mở http://127.0.0.1:8000
 
 ## Tài khoản thử (mật khẩu: password)

@@ -16,7 +16,9 @@ return new class extends Migration {
         Schema::table('reports', fn (Blueprint $t) => $t->index('status'));
         Schema::table('reputation_logs', fn (Blueprint $t) => $t->index(['user_id', 'created_at']));
 
-        DB::statement("CREATE OR REPLACE VIEW v_subject_stats AS
+        $viewPrefix = DB::getDriverName() === 'mysql' ? 'CREATE OR REPLACE VIEW' : 'CREATE VIEW';
+
+        DB::statement("$viewPrefix v_subject_stats AS
             SELECT s.id, s.code, s.name,
                    COUNT(q.id) AS total_questions,
                    COALESCE(SUM(q.accepted_answer_id IS NOT NULL), 0) AS answered_questions,
@@ -24,7 +26,7 @@ return new class extends Migration {
             FROM subjects s LEFT JOIN questions q ON q.subject_id = s.id AND q.is_hidden = 0
             GROUP BY s.id, s.code, s.name");
 
-        DB::statement("CREATE OR REPLACE VIEW v_top_contributors AS
+        DB::statement("$viewPrefix v_top_contributors AS
             SELECT u.id, u.name, u.reputation,
                    COUNT(DISTINCT q.id) AS questions,
                    COUNT(DISTINCT a.id) AS answers,

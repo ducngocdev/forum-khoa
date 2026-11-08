@@ -6,7 +6,9 @@ use App\Http\Requests\ProfileUpdateRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class ProfileController extends Controller
@@ -18,6 +20,7 @@ class ProfileController extends Controller
     {
         return view('profile.edit', [
             'user' => $request->user(),
+            'books' => $request->user()->books()->latest()->get(),
         ]);
     }
 
@@ -26,15 +29,39 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $data = $request->validated();
+        unset($data['avatar'], $data['academic_year'], $data['remove_avatar']);
+        $user = $request->user();
+        $oldAvatarPath = $user->avatar_path;
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        if ($request->hasFile('avatar')) {
+            $avatar = $request->file('avatar');
+            $extension = strtolower($avatar->getClientOriginalExtension());
+            $directory = storage_path('app/public/avatars');
+            File::ensureDirectoryExists($directory);
+            $filename = Str::random(40) . '.' . $extension;
+            $avatar->move($directory, $filename);
+            $data['avatar_path'] = 'avatars/' . $filename;
+        } elseif ($request->boolean('remove_avatar')) {
+            $data['avatar_path'] = null;
         }
 
-        $request->user()->save();
+        $user->fill($data);
 
-        return Redirect::route('profile.edit')->with('status', 'profile-updated');
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
+        }
+
+        $user->save();
+
+        $newAvatarPath = array_key_exists('avatar_path', $data) ? $data['avatar_path'] : $oldAvatarPath;
+        if ($oldAvatarPath && $oldAvatarPath !== $newAvatarPath) {
+            if (str_starts_with($oldAvatarPath, 'avatars/') && basename($oldAvatarPath) !== '') {
+                File::delete(storage_path('app/public/' . $oldAvatarPath));
+            }
+        }
+
+        return Redirect::route('users.show', $user)->with('status', 'profile-updated');
     }
 
     /**

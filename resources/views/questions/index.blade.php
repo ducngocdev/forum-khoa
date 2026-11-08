@@ -149,9 +149,7 @@
                         @forelse($topUsers as $index => $u)
                             <div class="py-2.5 first:pt-0 last:pb-0 flex items-center justify-between">
                                 <div class="flex items-center gap-2.5 min-w-0">
-                                    <div class="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs uppercase shrink-0">
-                                        {{ mb_substr($u->name ?? 'U', 0, 1) }}
-                                    </div>
+                                    <x-user-avatar :user="$u" size="w-7 h-7" text-size="text-xs" />
                                     <a href="{{ route('users.show', $u->id) }}" class="text-xs font-semibold text-gray-900 hover:text-blue-600 truncate block">
                                         {{ $u->name }}
                                     </a>

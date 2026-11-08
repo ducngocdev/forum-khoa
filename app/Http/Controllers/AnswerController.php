@@ -38,4 +38,14 @@ class AnswerController extends Controller
         }
         return back();
     }
+
+    public function destroy(Request $r, Answer $answer)
+    {
+        abort_unless($answer->user_id === $r->user()->id, 403);
+        $answer->update(['is_hidden' => true]);
+        if ($answer->question?->accepted_answer_id === $answer->id) {
+            $answer->question->update(['accepted_answer_id' => null]);
+        }
+        return back()->with('status', 'Đã thu hồi câu trả lời.');
+    }
 }
