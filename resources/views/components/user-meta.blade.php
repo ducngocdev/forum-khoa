@@ -10,10 +10,11 @@
         <a href="{{ route('users.show', $user) }}" class="font-semibold text-gray-800 hover:text-blue-600">
             {{ $user->name }}
         </a>
+        <x-user-role-badge :user="$user" />
         @if($details)
             <span class="text-gray-500">{{ $details }}</span>
         @endif
-        <span class="text-gray-400">({{ $user->reputation ?? 0 }} điểm)</span>
+        <span class="text-gray-400">({{ $user->display_reputation ?? 0 }} điểm)</span>
     @endif
     @if($action)
         <span class="text-gray-400">·</span><span>{{ $action }}</span>

@@ -14,7 +14,9 @@ class StatsController extends Controller
         ])->orderByDesc('questions_count')->get();
         $topRep = User::orderByDesc('reputation')->limit(10)->get();
         $topMonth = User::withCount(['answers as accepted_month' => fn ($q) =>
-            $q->where('is_accepted', true)->where('updated_at', '>=', now()->startOfMonth())])
+            $q->whereHas('question', fn ($query) => $query
+                ->whereColumn('questions.accepted_answer_id', 'answers.id')
+                ->where('questions.updated_at', '>=', now()->startOfMonth()))])
             ->orderByDesc('accepted_month')->limit(10)->get();
         $top = DB::table('v_top_contributors')->orderByDesc('accepted')->orderByDesc('answers')->limit(10)->get();
         return view('stats.index', compact('bySubject', 'topRep', 'topMonth', 'top'));

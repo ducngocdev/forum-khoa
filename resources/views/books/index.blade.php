@@ -1,12 +1,17 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex items-center justify-between gap-4">
+        <div class="flex w-full items-center justify-between gap-4">
             <div>
-                <h2 class="text-xl font-bold text-gray-900">Sách cũ trong Khoa</h2>
-                <p class="text-sm text-gray-500 mt-1">Mua lại hoặc nhận sách được tặng từ thành viên khác.</p>
+                <h2 class="text-xl font-bold text-white">Sách cũ trong Khoa</h2>
+                <p class="text-sm text-blue-100 mt-1">Mua lại hoặc nhận sách được tặng từ thành viên khác.</p>
             </div>
             @auth
-                <a href="{{ route('books.create') }}" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700">Đăng sách</a>
+                <a href="{{ route('books.create') }}" class="inline-flex items-center gap-1.5 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-blue-700 shadow-sm transition-colors hover:bg-blue-50">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Đăng sách
+                </a>
             @endauth
         </div>
     </x-slot>
@@ -19,11 +24,11 @@
                 <option value="sale" @selected(request('type') === 'sale')>Đang bán</option>
                 <option value="giveaway" @selected(request('type') === 'giveaway')>Cho tặng</option>
             </select>
-            <button class="px-4 py-2 rounded-lg bg-gray-900 text-white text-sm font-semibold">Lọc</button>
+            <button class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition-colors">Lọc</button>
         </form>
 
         @if(session('status') === 'book-created')
-            <div class="rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-700">Đã đăng thông tin sách.</div>
+            <div class="rounded-lg bg-blue-50 px-4 py-3 text-sm text-blue-700">Đã đăng thông tin sách.</div>
         @endif
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -34,7 +39,7 @@
                     @endif
                     <div class="flex items-start justify-between gap-3">
                         <h3 class="font-bold text-gray-900">{{ $book->title }}</h3>
-                        <span class="shrink-0 px-2 py-1 rounded-full text-xs font-semibold {{ $book->type === 'giveaway' ? 'bg-emerald-50 text-emerald-700' : 'bg-blue-50 text-blue-700' }}">
+                        <span class="shrink-0 px-2 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700">
                             {{ $book->type === 'giveaway' ? 'Cho tặng' : 'Bán' }}
                         </span>
                     </div>

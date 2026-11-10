@@ -3,7 +3,12 @@ namespace App\Http\Controllers;
 
 use App\Models\{Question, Subject, Tag};
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
+use RuntimeException;
+use Throwable;
 
 class QuestionController extends Controller
 {
@@ -11,7 +16,15 @@ class QuestionController extends Controller
 
     public function index(Request $r)
     {
-        $q = Question::with(['user', 'subject', 'tags'])->withCount('answers')->where('is_hidden', false);
+        $q = Question::with(['user', 'subject', 'tags', 'media'])->withCount([
+            'answers',
+            'comments',
+            'votes as yes_votes_count' => fn ($votes) => $votes->where('value', 1),
+            'votes as no_votes_count' => fn ($votes) => $votes->where('value', -1),
+        ])->where('is_hidden', false);
+        if ($r->filled('post_type') && in_array($r->post_type, ['question', 'share'], true)) {
+            $q->where('post_type', $r->post_type);
+        }
         if ($s = trim((string) $r->q)) {
             if ($q->getModel()->getConnection()->getDriverName() === 'mysql') {
                 $q->whereRaw(self::FT, [$s])->orderByRaw(self::FT . ' DESC', [$s]);
@@ -50,15 +63,55 @@ class QuestionController extends Controller
     public function store(Request $r)
     {
         $d = $r->validate([
+            'post_type' => 'sometimes|in:question,share',
             'title' => 'required|string|min:10|max:200', 'body' => 'required|string|min:20',
-            'subject_id' => 'required|exists:subjects,id', 'tags' => 'nullable|string|max:200',
+            'subject_id' => 'nullable|exists:subjects,id', 'tags' => 'nullable|string|max:200',
+            'attachments' => 'nullable|array|max:6',
+            'attachments.*' => 'file|mimes:jpg,jpeg,png,gif,webp,mp4,webm,mov|max:51200',
         ]);
-        $question = Question::create([
-            'user_id' => $r->user()->id, 'subject_id' => $d['subject_id'], 'title' => $d['title'], 'body' => $d['body'],
-        ]);
-        $ids = collect(explode(',', $d['tags'] ?? ''))->map(fn ($t) => trim($t))->filter()->unique()->take(5)
-            ->map(fn ($name) => Tag::firstOrCreate(['slug' => Str::slug($name)], ['name' => $name])->id);
-        $question->tags()->sync($ids);
+
+        $attachments = $r->file('attachments', []);
+        foreach ($attachments as $file) {
+            if (str_starts_with((string) $file->getMimeType(), 'image/') && $file->getSize() > 5 * 1024 * 1024) {
+                throw ValidationException::withMessages([
+                    'attachments' => 'Mỗi ảnh được chọn không vượt quá 5 MB.',
+                ]);
+            }
+        }
+
+        $storedPaths = [];
+        try {
+            $question = DB::transaction(function () use ($r, $d, $attachments, &$storedPaths) {
+                $question = Question::create([
+                    'user_id' => $r->user()->id,
+                    'subject_id' => $d['subject_id'] ?? null,
+                    'post_type' => $d['post_type'] ?? 'question',
+                    'title' => $d['title'],
+                    'body' => $d['body'],
+                ]);
+                $ids = collect(explode(',', $d['tags'] ?? ''))->map(fn ($t) => trim($t))->filter()->unique()->take(5)
+                    ->map(fn ($name) => Tag::firstOrCreate(['slug' => Str::slug($name)], ['name' => $name])->id);
+                $question->tags()->sync($ids);
+
+                foreach ($attachments as $file) {
+                    $path = $file->store('questions/' . $question->id, 'public');
+                    if ($path === false) {
+                        throw new RuntimeException('Không thể lưu tệp đính kèm.');
+                    }
+                    $storedPaths[] = $path;
+                    $question->media()->create([
+                        'path' => $path,
+                        'mime_type' => $file->getMimeType(),
+                    ]);
+                }
+
+                return $question;
+            });
+        } catch (Throwable $exception) {
+            Storage::disk('public')->delete($storedPaths);
+            throw $exception;
+        }
+
         return redirect()->route('questions.show', $question);
     }
 
@@ -66,9 +119,10 @@ class QuestionController extends Controller
     {
         abort_if($question->is_hidden, 404);
         $question->increment('view_count');
-        $question->load(['user', 'subject', 'tags']);
+        $question->load(['user', 'subject', 'tags', 'media']);
         $answers = $question->answers()->where('is_hidden', false)->with('user')
-            ->orderByDesc('is_accepted')->orderByDesc('score')->get();
+            ->orderByRaw('CASE WHEN id = ? THEN 1 ELSE 0 END DESC', [$question->accepted_answer_id ?? 0])
+            ->orderByDesc('score')->get();
         $visible = fn ($c) => $c->where('is_hidden', false)->with('user');
         $question->load(['comments' => $visible]);
         $answers->load(['comments' => $visible]);
@@ -79,7 +133,7 @@ class QuestionController extends Controller
     {
         abort_unless($question->user_id === $r->user()->id, 403);
         $question->update(['is_hidden' => true]);
-        return redirect()->route('questions.index')->with('status', 'Đã thu hồi câu hỏi.');
+        return redirect()->route('questions.index')->with('status', 'Đã thu hồi bài viết.');
     }
 
     // Gợi ý câu hỏi tương tự khi đang gõ tiêu đề

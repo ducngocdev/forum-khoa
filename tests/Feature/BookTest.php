@@ -15,6 +15,16 @@ class BookTest extends TestCase
 
     private array $uploadedFiles = [];
 
+    public function test_authenticated_user_can_open_book_form(): void
+    {
+        $response = $this->actingAs(User::factory()->create())
+            ->get(route('books.create'));
+
+        $response->assertOk()
+            ->assertSee('Chia sẻ sách với mọi người')
+            ->assertSee('Đăng sách');
+    }
+
     protected function tearDown(): void
     {
         foreach ($this->uploadedFiles as $path) {

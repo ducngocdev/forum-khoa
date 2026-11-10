@@ -1,61 +1,84 @@
 @props(['question'])
 
-<div class="bg-white border border-gray-100 rounded-xl p-4 sm:p-5 flex gap-4 sm:gap-5 shadow-sm hover:shadow-md transition-shadow duration-200">
-    <!-- Cột thống kê số phiếu và số trả lời -->
-    <div class="flex flex-col gap-2 shrink-0 items-center">
-        <!-- Ô số phiếu -->
-        <div class="w-14 h-14 rounded-lg bg-gray-50 border border-gray-200 flex flex-col items-center justify-center text-center">
-            <span class="text-base font-bold text-gray-700 leading-none">{{ $question->score }}</span>
-            <span class="text-[11px] text-gray-500 mt-0.5">phiếu</span>
-        </div>
-
-        <!-- Ô số trả lời: nếu có accepted_answer_id thì nền xanh lá chữ trắng -->
-        @if($question->accepted_answer_id)
-            <div class="w-14 h-14 rounded-lg bg-emerald-600 border border-emerald-600 flex flex-col items-center justify-center text-center text-white shadow-sm" title="Đã có câu trả lời được chấp nhận">
-                <span class="text-base font-bold leading-none">{{ $question->answers_count }}</span>
-                <span class="text-[11px] leading-tight mt-0.5 font-medium">trả lời ✓</span>
+<article class="question-feed-card">
+    <header class="question-feed-card__header">
+        <x-user-avatar :user="$question->user" size="w-11 h-11" text-size="text-sm" />
+        <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap items-center gap-1.5">
+                <a href="{{ route('users.show', $question->user) }}" class="question-feed-card__author">{{ $question->user->name }}</a>
+                <x-user-role-badge :user="$question->user" />
             </div>
-        @else
-            <div class="w-14 h-14 rounded-lg bg-gray-50 border border-gray-200 flex flex-col items-center justify-center text-center {{ $question->answers_count > 0 ? 'border-blue-200 bg-blue-50/50' : '' }}">
-                <span class="text-base font-bold {{ $question->answers_count > 0 ? 'text-blue-600' : 'text-gray-600' }} leading-none">{{ $question->answers_count }}</span>
-                <span class="text-[11px] text-gray-500 mt-0.5">trả lời</span>
+            <div class="question-feed-card__meta">
+                <span>{{ $question->created_at->diffForHumans() }}</span>
+                @if($question->subject)
+                    <span aria-hidden="true">·</span>
+                    <a href="{{ route('questions.index', ['subject' => $question->subject->id]) }}">{{ $question->subject->code }}</a>
+                @endif
+            </div>
+        </div>
+        <span class="question-feed-card__status {{ $question->post_type === 'share' ? 'is-share' : ($question->accepted_answer_id ? 'is-answered' : '') }}">
+            {{ $question->post_type === 'share' ? 'Chia sẻ' : ($question->accepted_answer_id ? 'Đã giải đáp' : 'Thắc mắc') }}
+        </span>
+    </header>
+
+    <div class="question-feed-card__content">
+        <h3>
+            <a href="{{ route('questions.show', $question) }}">{{ $question->title }}</a>
+        </h3>
+        <p>{{ \Illuminate\Support\Str::limit(strip_tags($question->body), 420) }}</p>
+        @if($question->tags->isNotEmpty())
+            <div class="post-tags">
+                @foreach($question->tags as $tag)
+                    <a href="{{ route('questions.index', ['tag' => $tag->slug]) }}">#{{ $tag->name }}</a>
+                @endforeach
             </div>
         @endif
     </div>
 
-    <!-- Nội dung chính câu hỏi -->
-    <div class="flex-1 min-w-0 flex flex-col justify-between">
-        <div>
-            <div class="flex items-center gap-2 mb-1.5 flex-wrap">
-                @if($question->subject)
-                    <a href="{{ route('questions.index', ['subject' => $question->subject->id]) }}" class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors">
-                        {{ $question->subject->code }}
+    @if($question->relationLoaded('media') && $question->media->isNotEmpty())
+        <div class="question-feed-card__media">
+            @foreach($question->media->take(4) as $attachment)
+                @if($attachment->is_video)
+                    <video controls preload="metadata">
+                        <source src="{{ asset('storage/' . $attachment->path) }}" type="{{ $attachment->mime_type }}">
+                    </video>
+                @else
+                    <a href="{{ asset('storage/' . $attachment->path) }}" data-image-viewer data-image-download="{{ basename($attachment->path) }}" aria-label="Mở ảnh đính kèm">
+                        <img src="{{ asset('storage/' . $attachment->path) }}" alt="Ảnh đính kèm của câu hỏi" loading="lazy">
                     </a>
                 @endif
-                <span class="text-xs text-gray-400">·</span>
-                <span class="text-xs text-gray-500">{{ $question->view_count }} lượt xem</span>
-            </div>
-
-            <h3 class="text-base sm:text-lg font-semibold leading-snug">
-                <a href="{{ route('questions.show', $question) }}" class="text-gray-900 hover:text-blue-600 transition-colors line-clamp-2">
-                    {{ $question->title }}
-                </a>
-            </h3>
+            @endforeach
+            @if($question->media->count() > 4)
+                <span class="question-feed-card__more-media">+{{ $question->media->count() - 4 }}</span>
+            @endif
         </div>
+    @endif
 
-        <div class="mt-3 pt-3 border-t border-gray-100 flex flex-wrap items-center justify-between gap-2">
-            <!-- Danh sách thẻ tags -->
-            <div class="flex flex-wrap gap-1.5">
-                @forelse($question->tags as $t)
-                    <a href="{{ route('questions.index', ['tag' => $t->slug]) }}" class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors">
-                        #{{ $t->name }}
-                    </a>
-                @empty
-                @endforelse
-            </div>
-
-            <!-- Tác giả & thời gian -->
-            <x-user-meta :user="$question->user" :time="$question->created_at->diffForHumans()" class="ml-auto" />
-        </div>
+    <div class="question-feed-card__stats">
+        @if($question->post_type === 'share')
+            <span>Yes {{ $question->yes_votes_count ?? 0 }} · No {{ $question->no_votes_count ?? 0 }}</span>
+            <span>{{ $question->comments_count ?? 0 }} bình luận · {{ $question->view_count }} lượt xem</span>
+        @else
+            <span>{{ $question->score }} phiếu</span>
+            <span>{{ $question->answers_count }} câu trả lời · {{ $question->view_count }} lượt xem</span>
+        @endif
     </div>
-</div>
+
+    <footer class="question-feed-card__actions">
+        <div class="question-feed-card__vote">
+            @include('forum.actions', [
+                'type' => 'question',
+                'model' => $question,
+                'voteOnly' => true,
+                'usefulnessOnly' => $question->post_type === 'share',
+            ])
+        </div>
+        <a href="{{ route('questions.show', $question) }}{{ $question->post_type === 'share' ? '#post-comments' : '#answer-form' }}">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8v.5Z"/>
+            </svg>
+            {{ $question->post_type === 'share' ? 'Bình luận' : 'Trả lời' }}
+        </a>
+        <a href="{{ route('questions.show', $question) }}">Xem thảo luận</a>
+    </footer>
+</article>

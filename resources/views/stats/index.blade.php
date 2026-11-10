@@ -1,5 +1,5 @@
 <x-app-layout>
-  <x-slot name="header"><h2 class="text-xl font-semibold">Thống kê</h2></x-slot>
+  <x-slot name="header"><h2 class="text-xl font-semibold text-white">Thống kê</h2></x-slot>
   <div class="max-w-4xl mx-auto py-6 px-4 grid md:grid-cols-2 gap-6">
     <div class="bg-white border rounded p-4 md:col-span-2">
       <h3 class="font-semibold mb-2">Câu hỏi theo môn</h3>
@@ -13,7 +13,7 @@
     </div>
     <div class="bg-white border rounded p-4">
       <h3 class="font-semibold mb-2">Uy tín cao nhất</h3>
-      @foreach($topRep as $u)<div class="text-sm flex justify-between"><span>{{ $u->name }}</span><span>{{ $u->reputation }}</span></div>@endforeach
+      @foreach($topRep as $u)<div class="text-sm flex justify-between"><span>{{ $u->name }}</span><span>{{ $u->display_reputation }}</span></div>@endforeach
     </div>
     <div class="bg-white border rounded p-4">
       <h3 class="font-semibold mb-2">Trả lời được chấp nhận trong tháng</h3>
@@ -28,7 +28,7 @@
             @foreach($top as $u)
               <tr class="border-b last:border-0">
                 <td class="py-2"><a href="{{ route('users.show', $u->id) }}" class="text-blue-700 hover:underline">{{ $u->name }}</a></td>
-                <td>{{ $u->questions }}</td><td>{{ $u->answers }}</td><td>{{ $u->accepted }}</td><td>{{ $u->reputation }}</td>
+                <td>{{ $u->questions }}</td><td>{{ $u->answers }}</td><td>{{ $u->accepted }}</td><td>{{ $u->display_reputation }}</td>
               </tr>
             @endforeach
           </tbody>

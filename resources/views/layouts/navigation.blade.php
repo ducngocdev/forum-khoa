@@ -1,6 +1,6 @@
-<nav x-data="{ open: false }" class="bg-white border-b border-gray-100 shadow-sm sticky top-0 z-50">
+<nav x-data="{ open: false }" class="site-navigation bg-white border-b border-gray-100 shadow-sm sticky top-0 z-50">
     <!-- Primary Navigation Menu -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
             <div class="flex items-center">
                 <div class="shrink-0 flex items-center">
@@ -43,6 +43,11 @@
 
             <!-- Settings Dropdown / Login links + Nút Đặt câu hỏi cho người đã đăng nhập -->
             <div class="hidden sm:flex sm:items-center sm:ms-4 sm:gap-2.5 whitespace-nowrap">
+                <button type="button" data-theme-toggle class="theme-toggle" aria-label="Bật giao diện tối" aria-pressed="false">
+                    <svg class="theme-toggle__moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M20.5 15.5A8.5 8.5 0 0 1 8.5 3.5a8.6 8.6 0 1 0 12 12Z"/></svg>
+                    <svg class="theme-toggle__sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="4" stroke-width="1.8"/><path stroke-linecap="round" stroke-width="1.8" d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg>
+                    <span data-theme-label>Sáng/Tối</span>
+                </button>
                 @auth
                     <!-- Nút Đặt câu hỏi màu xanh nổi bật cho người đã đăng nhập -->
                     @unless(request()->routeIs('home', 'admin.users.*'))
@@ -50,7 +55,7 @@
                             <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                             </svg>
-                            Đặt câu hỏi
+                            Đăng bài
                         </a>
                     @endunless
 
@@ -60,7 +65,7 @@
                                 <x-user-avatar :user="Auth::user()" size="w-6 h-6" text-size="text-xs" class="mr-2" />
                                 <div class="font-medium whitespace-nowrap">{{ Auth::user()->name }}</div>
                                 <span class="ms-1 text-xs font-semibold whitespace-nowrap px-1 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">
-                                    {{ Auth::user()->reputation }} đ
+                                    {{ Auth::user()->display_reputation }} đ
                                 </span>
                                 <div class="ms-1.5">
                                     <svg class="fill-current h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
@@ -111,9 +116,22 @@
         </div>
     </div>
 
+    <div class="navigation-rain" aria-hidden="true">
+        @for ($drop = 0; $drop < 48; $drop++)
+            <span style="left: {{ ($drop * 37) % 100 }}%; animation-delay: -{{ ($drop * 173) % 1800 }}ms; animation-duration: {{ 850 + ($drop * 97) % 900 }}ms; height: {{ 12 + ($drop * 5) % 15 }}px"></span>
+        @endfor
+    </div>
+
     <!-- Responsive Navigation Menu -->
-    <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden bg-white border-b border-gray-200">
+    <div :class="{'block': open, 'hidden': ! open}" class="relative z-10 hidden sm:hidden bg-white border-b border-gray-200">
         <div class="pt-2 pb-3 space-y-1">
+            <div class="px-4 py-2">
+                <button type="button" data-theme-toggle class="theme-toggle" aria-label="Bật giao diện tối" aria-pressed="false">
+                    <svg class="theme-toggle__moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M20.5 15.5A8.5 8.5 0 0 1 8.5 3.5a8.6 8.6 0 1 0 12 12Z"/></svg>
+                    <svg class="theme-toggle__sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="4" stroke-width="1.8"/><path stroke-linecap="round" stroke-width="1.8" d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg>
+                    <span data-theme-label>Sáng/Tối</span>
+                </button>
+            </div>
             <x-responsive-nav-link :href="route('home')" :active="request()->routeIs('home')">
                 Trang chủ
             </x-responsive-nav-link>
@@ -139,7 +157,7 @@
                 @endif
                 <div class="px-4 pt-2">
                     <a href="{{ route('questions.create') }}" class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 shadow-sm">
-                        + Đặt câu hỏi
+                        + Đăng bài
                     </a>
                 </div>
             @endauth
@@ -151,7 +169,7 @@
                     <x-user-avatar :user="Auth::user()" size="w-9 h-9" text-size="text-sm" />
                     <div>
                         <div class="font-medium text-base text-gray-800">{{ Auth::user()->name }}</div>
-                        <div class="font-medium text-xs text-gray-500">{{ Auth::user()->email }} · {{ Auth::user()->reputation }} điểm</div>
+                        <div class="font-medium text-xs text-gray-500">{{ Auth::user()->email }} · {{ Auth::user()->display_reputation }} điểm</div>
                     </div>
                 </div>
 

@@ -6,11 +6,7 @@
       <div>
         <div class="flex items-center gap-2">
           <h2 class="text-xl font-bold text-gray-900 leading-tight">{{ $user->name }}</h2>
-          @if($user->role === 'admin')
-            <span class="px-2 py-0.5 rounded text-xs font-bold bg-red-100 text-red-700 border border-red-200">Quản trị</span>
-          @elseif($user->role === 'moderator')
-            <span class="px-2 py-0.5 rounded text-xs font-bold bg-indigo-100 text-indigo-700 border border-indigo-200">Kiểm duyệt viên</span>
-          @endif
+          <x-user-role-badge :user="$user" />
         </div>
         <p class="text-xs text-gray-500 mt-0.5">Tham gia từ {{ $user->created_at ? $user->created_at->format('d/m/Y') : 'N/A' }}</p>
         <p class="text-xs text-gray-600 mt-1">{{ collect([$user->academic_title, $user->class_name, $user->study_year])->filter()->join(' · ') }}</p>
@@ -71,7 +67,7 @@
         </div>
         <div>
           <div class="text-xs text-gray-500 font-medium">Điểm uy tín</div>
-          <div class="text-2xl font-bold text-gray-900">{{ number_format($user->reputation) }}</div>
+          <div class="text-2xl font-bold text-gray-900">{{ number_format($user->display_reputation) }}</div>
         </div>
       </div>
 
@@ -100,13 +96,13 @@
       </div>
     </div>
 
-    <!-- Câu hỏi gần đây -->
+    <!-- Bài viết gần đây -->
     <section class="bg-white border border-gray-100 rounded-xl shadow-sm p-6">
       <h3 class="text-base font-bold text-gray-900 mb-4 pb-2 border-b border-gray-100 flex items-center gap-2">
         <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
         </svg>
-        Câu hỏi gần đây
+        Bài viết gần đây
       </h3>
       <div class="divide-y divide-gray-100">
         @forelse($questions as $question)
@@ -117,7 +113,7 @@
             <span class="text-xs text-gray-400 shrink-0">{{ $question->created_at->diffForHumans() }}</span>
           </div>
         @empty
-          <p class="text-sm text-gray-500 py-3">Thành viên này chưa đăng câu hỏi nào.</p>
+          <p class="text-sm text-gray-500 py-3">Thành viên này chưa đăng bài nào.</p>
         @endforelse
       </div>
     </section>

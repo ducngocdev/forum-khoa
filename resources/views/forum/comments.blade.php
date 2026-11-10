@@ -1,5 +1,5 @@
 {{-- Biến: $type (question|answer), $model --}}
-<section class="comments-panel" aria-label="Bình luận">
+<section class="comments-panel" aria-label="Bình luận" @if($type === 'question' && $model->post_type === 'share') id="post-comments" @endif>
   @if($model->comments->isNotEmpty())
     <div class="comments-toolbar">
       <button type="button" class="comments-toggle comments-toggle--collapse" data-comments-collapse>

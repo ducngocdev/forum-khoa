@@ -1,6 +1,6 @@
-@props(['voteOnly' => false, 'reportOnly' => false])
+@props(['voteOnly' => false, 'reportOnly' => false, 'usefulnessOnly' => false])
 
-@if(!$reportOnly && $type === 'question')
+@if(!$reportOnly && $type === 'question' && !$usefulnessOnly)
   <form method="POST" action="{{ route('votes.store') }}" class="{{ $voteOnly ? 'vote-stack' : 'vote-inline' }}">
     @csrf
     <input type="hidden" name="type" value="{{ $type }}">
@@ -13,7 +13,7 @@
       <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7"/></svg>
     </button>
   </form>
-@elseif(!$reportOnly && !$voteOnly)
+@elseif($usefulnessOnly || (!$reportOnly && !$voteOnly))
   @php
     $isStudent = auth()->check() && (strtolower((string) auth()->user()->academic_title) === 'sinh viên' || (!auth()->user()->academic_title && auth()->user()->role === 'student'));
     $yesVotes = $model->votes()->with('user')->where('value', 1)->get();

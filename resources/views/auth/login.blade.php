@@ -1,47 +1,52 @@
 <x-guest-layout>
-    <!-- Session Status -->
-    <x-auth-session-status class="mb-4" :status="session('status')" />
-
-    <form method="POST" action="{{ route('login') }}">
-        @csrf
-
-        <!-- Email Address -->
-        <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
+    <div class="auth-form">
+        <div class="auth-tabs" role="tablist" aria-label="Tài khoản">
+            <a class="auth-tabs__link auth-tabs__link--active" href="{{ route('login') }}" aria-current="page">Đăng nhập</a>
+            <a class="auth-tabs__link" href="{{ route('register') }}">Tạo tài khoản</a>
         </div>
 
-        <!-- Password -->
-        <div class="mt-4">
-            <x-input-label for="password" :value="__('Password')" />
-
-            <x-text-input id="password" class="block mt-1 w-full"
-                            type="password"
-                            name="password"
-                            required autocomplete="current-password" />
-
-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
+        <div class="auth-heading">
+            <p class="auth-eyebrow">CHÀO MỪNG TRỞ LẠI</p>
+            <h2>Đăng nhập</h2>
+            <p>Rất vui được gặp lại bạn. Hãy tiếp tục hành trình học hỏi nhé!</p>
         </div>
 
-        <!-- Remember Me -->
-        <div class="block mt-4">
-            <label for="remember_me" class="inline-flex items-center">
-                <input id="remember_me" type="checkbox" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" name="remember">
-                <span class="ms-2 text-sm text-gray-600">{{ __('Remember me') }}</span>
+        <x-auth-session-status class="auth-status" :status="session('status')" />
+
+        <form method="POST" action="{{ route('login') }}" class="auth-fields">
+            @csrf
+
+            <div class="auth-field">
+                <label for="email">Địa chỉ email</label>
+                <input id="email" name="email" type="email" value="{{ old('email') }}" placeholder="ban@email.com" autocomplete="username" required autofocus data-auth-email>
+                <x-input-error :messages="$errors->get('email')" class="auth-error" />
+            </div>
+
+            <div class="auth-field">
+                <div class="auth-field__topline">
+                    <label for="password">Mật khẩu</label>
+                    @if (Route::has('password.request'))
+                        <a class="auth-subtle-link" href="{{ route('password.request') }}">Quên mật khẩu?</a>
+                    @endif
+                </div>
+                <div class="auth-password-control">
+                    <input id="password" name="password" type="password" placeholder="Nhập mật khẩu" autocomplete="current-password" required data-auth-password>
+                    <button class="auth-password-toggle" type="button" data-password-toggle aria-label="Hiện mật khẩu" aria-pressed="false">Hiện</button>
+                </div>
+                <x-input-error :messages="$errors->get('password')" class="auth-error" />
+            </div>
+
+            <label class="auth-remember" for="remember_me">
+                <input id="remember_me" type="checkbox" name="remember">
+                <span>Ghi nhớ đăng nhập</span>
             </label>
-        </div>
 
-        <div class="flex items-center justify-end mt-4">
-            @if (Route::has('password.request'))
-                <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('password.request') }}">
-                    {{ __('Forgot your password?') }}
-                </a>
-            @endif
+            <button class="auth-submit" type="submit">
+                Đăng nhập
+                <span aria-hidden="true">→</span>
+            </button>
+        </form>
 
-            <x-primary-button class="ms-3">
-                {{ __('Log in') }}
-            </x-primary-button>
-        </div>
-    </form>
+        <p class="auth-switch">Bạn chưa có tài khoản? <a href="{{ route('register') }}">Đăng ký ngay</a></p>
+    </div>
 </x-guest-layout>

@@ -2,7 +2,7 @@
 
 @php
     $isQuestion = $type === 'question';
-    $isAccepted = !$isQuestion && $model->is_accepted;
+    $isAccepted = !$isQuestion && $question?->accepted_answer_id === $model->id;
 @endphp
 
 <article class="post-card {{ $isAccepted ? 'post-card--accepted' : '' }}">
@@ -28,6 +28,23 @@
             {!! \Illuminate\Support\Str::markdown($model->body, ['html_input' => 'escape', 'allow_unsafe_links' => false]) !!}
         </div>
 
+        @if($isQuestion && $model->relationLoaded('media') && $model->media->isNotEmpty())
+            <div class="question-media-grid" aria-label="Tệp đính kèm">
+                @foreach($model->media as $attachment)
+                    @if($attachment->is_video)
+                        <video class="question-media-grid__video" controls preload="metadata">
+                            <source src="{{ asset('storage/' . $attachment->path) }}" type="{{ $attachment->mime_type }}">
+                            Trình duyệt của bạn không hỗ trợ phát video.
+                        </video>
+                    @else
+                        <a class="question-media-grid__image" href="{{ asset('storage/' . $attachment->path) }}" data-image-viewer data-image-download="{{ basename($attachment->path) }}" aria-label="Mở ảnh đính kèm">
+                            <img src="{{ asset('storage/' . $attachment->path) }}" alt="Ảnh đính kèm của câu hỏi" loading="lazy">
+                        </a>
+                    @endif
+                @endforeach
+            </div>
+        @endif
+
         @if($isQuestion)
             <div class="post-tags">
                 @foreach($model->tags as $tag)
@@ -48,7 +65,13 @@
                 @if($type === 'answer')
                     <a href="#answer-form" class="post-action">Trả lời</a>
                 @endif
-                @include('forum.actions', ['type' => $type, 'model' => $model, 'voteOnly' => false, 'reportOnly' => $isQuestion])
+                @include('forum.actions', [
+                    'type' => $type,
+                    'model' => $model,
+                    'voteOnly' => false,
+                    'reportOnly' => $isQuestion,
+                    'usefulnessOnly' => $isQuestion && $model->post_type === 'share',
+                ])
                 @if($type === 'answer' && auth()->id() === $question?->user_id)
                     <form method="POST" action="{{ route('answers.accept', $model) }}">
                         @csrf

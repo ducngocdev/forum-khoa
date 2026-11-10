@@ -1,7 +1,7 @@
 <x-app-layout>
     <!-- Hero Section -->
-    <div class="bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 text-white shadow-inner">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+    <div class="home-hero bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 text-white shadow-inner">
+        <div class="home-hero__content max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
             <div class="max-w-3xl">
                 <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-white/20 backdrop-blur-sm text-blue-100 mb-3 tracking-wide">
                     Cộng đồng học thuật
@@ -30,14 +30,14 @@
                             <svg class="w-5 h-5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                             </svg>
-                            Đặt câu hỏi
+                            Đăng bài
                         </a>
                     @else
                         <a href="{{ route('register') }}" class="inline-flex items-center justify-center px-5 py-2.5 border border-transparent rounded-lg font-semibold text-sm sm:text-base text-blue-700 bg-white hover:bg-blue-50 shadow-md hover:shadow-lg transition-all duration-150">
                             <svg class="w-5 h-5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                             </svg>
-                            Đặt câu hỏi
+                            Đăng bài
                         </a>
                     @endauth
                 </div>
@@ -56,7 +56,7 @@
                 </div>
                 <div>
                     <div class="text-2xl font-bold text-gray-900">{{ number_format($totalQuestions) }}</div>
-                    <div class="text-sm font-medium text-gray-500">Tổng câu hỏi</div>
+                    <div class="text-sm font-medium text-gray-500">Tổng bài viết</div>
                 </div>
             </div>
 
@@ -149,7 +149,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200 shrink-0">★ {{ $u->reputation }}</span>
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200 shrink-0">★ {{ $u->display_reputation }}</span>
                             </div>
                         @empty
                             <p class="text-gray-500 text-sm py-2">Chưa có người đóng góp.</p>

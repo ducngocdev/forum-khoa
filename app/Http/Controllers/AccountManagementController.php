@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Services\AcceptedAnswerService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -84,6 +85,7 @@ class AccountManagementController extends Controller
                 return false;
             }
 
+            AcceptedAnswerService::clearForUser($user);
             $user->delete();
 
             return true;

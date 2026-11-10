@@ -11,13 +11,21 @@ class HomeController extends Controller
     public function index()
     {
         $totalQuestions = Question::where('is_hidden', false)->count();
-        $answeredQuestions = Question::where('is_hidden', false)->whereNotNull('accepted_answer_id')->count();
+        $answeredQuestions = Question::where('is_hidden', false)
+            ->where('post_type', 'question')
+            ->whereNotNull('accepted_answer_id')
+            ->count();
         $totalMembers = DB::table('users')->where('is_banned', false)->count();
 
         $subjects = DB::table('v_subject_stats')->orderByDesc('total_questions')->get();
 
-        $latestQuestions = Question::with(['user', 'subject', 'tags'])
-            ->withCount('answers')
+        $latestQuestions = Question::with(['user', 'subject', 'tags', 'media'])
+            ->withCount([
+                'answers',
+                'comments',
+                'votes as yes_votes_count' => fn ($votes) => $votes->where('value', 1),
+                'votes as no_votes_count' => fn ($votes) => $votes->where('value', -1),
+            ])
             ->where('is_hidden', false)
             ->latest()
             ->limit(6)

@@ -1,15 +1,15 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex items-center justify-between">
-            <h2 class="text-xl font-bold text-gray-900 leading-tight">
-                Danh sách câu hỏi
+        <div class="flex w-full items-center justify-between">
+            <h2 class="text-xl font-bold text-white leading-tight">
+                Danh sách bài viết
             </h2>
             @auth
-                <a href="{{ route('questions.create') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
+                <a href="{{ route('questions.create') }}" class="inline-flex items-center px-4 py-2 bg-white hover:bg-blue-50 text-blue-700 text-sm font-semibold rounded-lg shadow-sm transition-colors">
                     <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                     </svg>
-                    Đặt câu hỏi
+                    Đăng bài
                 </a>
             @endauth
         </div>
@@ -52,6 +52,12 @@
                                 @endforeach
                             </select>
 
+                            <select name="post_type" aria-label="Lọc theo loại bài viết" class="text-xs border-gray-300 rounded-lg py-1.5 pl-2.5 pr-8 focus:ring-1 focus:ring-blue-500">
+                                <option value="">Mọi loại bài</option>
+                                <option value="question" @selected(request('post_type') === 'question')>Thắc mắc</option>
+                                <option value="share" @selected(request('post_type') === 'share')>Chia sẻ</option>
+                            </select>
+
                             <select name="sort" class="text-xs border-gray-300 rounded-lg py-1.5 pl-2.5 pr-8 focus:ring-1 focus:ring-blue-500">
                                 <option value="" @selected(request('sort') === null || request('sort') === '')>Mới nhất</option>
                                 <option value="votes" @selected(request('sort') === 'votes')>Nhiều phiếu nhất</option>
@@ -64,7 +70,7 @@
                                 <span>Chưa có đáp án</span>
                             </label>
 
-                            @if(request()->hasAny(['q', 'subject', 'tag', 'sort', 'filter']))
+                            @if(request()->hasAny(['q', 'subject', 'tag', 'post_type', 'sort', 'filter']))
                                 <a href="{{ route('questions.index') }}" class="text-xs text-red-600 hover:underline">
                                     Xóa lọc
                                 </a>
@@ -82,12 +88,12 @@
                             <svg class="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                             </svg>
-                            <h3 class="text-base font-semibold text-gray-900">Không tìm thấy câu hỏi nào</h3>
-                            <p class="text-sm text-gray-500 mt-1">Hãy thử tìm với từ khóa khác hoặc đặt câu hỏi mới.</p>
+                            <h3 class="text-base font-semibold text-gray-900">Không tìm thấy bài viết nào</h3>
+                            <p class="text-sm text-gray-500 mt-1">Hãy thử tìm với từ khóa khác hoặc đăng bài mới.</p>
                             @auth
                                 <div class="mt-4">
                                     <a href="{{ route('questions.create') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg">
-                                        Đặt câu hỏi ngay
+                                        Đăng bài ngay
                                     </a>
                                 </div>
                             @endauth
@@ -155,7 +161,7 @@
                                     </a>
                                 </div>
                                 <span class="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 shrink-0">
-                                    ★ {{ $u->reputation }}
+                                    ★ {{ $u->display_reputation }}
                                 </span>
                             </div>
                         @empty

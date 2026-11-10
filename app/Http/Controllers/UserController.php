@@ -11,7 +11,9 @@ class UserController extends Controller
         $questions = $user->questions()->where('is_hidden', false)->latest()->limit(5)->get();
         $answers = $user->answers()->where('is_hidden', false)->with('question')->latest()->limit(10)->get();
         $answersCount = $user->answers()->where('is_hidden', false)->count();
-        $acceptedAnswersCount = $user->answers()->where('is_hidden', false)->where('is_accepted', true)->count();
+        $acceptedAnswersCount = $user->answers()->where('is_hidden', false)
+            ->whereHas('question', fn ($query) => $query->whereColumn('questions.accepted_answer_id', 'answers.id'))
+            ->count();
         $books = $user->books()->latest()->limit(6)->get();
 
         return view('users.show', compact('user', 'logs', 'questions', 'answers', 'answersCount', 'acceptedAnswersCount', 'books'));

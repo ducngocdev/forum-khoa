@@ -22,7 +22,8 @@ class VoteService
 
     public static function cast(User $voter, Model $votable, int $value): void
     {
-        if ($votable instanceof Answer || $votable instanceof Comment) {
+        if ($votable instanceof Answer || $votable instanceof Comment
+            || ($votable instanceof Question && $votable->post_type === 'share')) {
             self::castHelpfulVote($voter, $votable, $value);
             return;
         }
@@ -41,15 +42,22 @@ class VoteService
             $oldPts = $vote && !$vote->is_suspicious ? self::points($votable, $vote->value) : 0;
 
             if ($vote && $vote->value === $value) {
+                $action = 'vote_cancelled';
                 $vote->delete(); $newValue = 0; $newPts = 0;
             } else {
+                $action = $vote ? 'vote_changed' : 'vote';
                 $suspicious = self::looksLikeRing($voter, $author);
                 $vote = Vote::updateOrCreate($key, ['value' => $value, 'is_suspicious' => $suspicious]);
                 $vote->touch();
                 $newValue = $value; $newPts = $suspicious ? 0 : self::points($votable, $value);
             }
             $votable->increment('score', $newValue - $oldValue);
-            ReputationService::give($author, $newPts - $oldPts, 'vote', $votable);
+            $points = $newPts - $oldPts;
+            if ($points === 0) {
+                ReputationService::record($author, $action, 0, $votable);
+            } else {
+                ReputationService::give($author, $points, $action, $votable);
+            }
         });
     }
 
@@ -71,12 +79,15 @@ class VoteService
             $vote = Vote::where($key)->first();
 
             if ($vote && $vote->value === $value) {
+                $action = 'vote_cancelled';
                 $vote->delete();
             } else {
+                $action = $vote ? 'vote_changed' : 'vote';
                 Vote::updateOrCreate($key, ['value' => $value, 'is_suspicious' => false]);
             }
 
             self::syncHelpfulReputation($author, $votable);
+            ReputationService::record($author, $action, 0, $votable);
         });
     }
 

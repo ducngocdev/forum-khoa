@@ -76,7 +76,7 @@
                                         {{ $roleLabels[$user->role] ?? $user->role }}
                                     </span>
                                 </td>
-                                <td class="px-4 py-3 text-gray-700">{{ number_format($user->reputation) }}</td>
+                                <td class="px-4 py-3 text-gray-700">{{ number_format($user->display_reputation) }}</td>
                                 <td class="px-4 py-3">
                                     <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold {{ $user->is_banned ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-700' }}">
                                         {{ $user->is_banned ? 'Đã khóa' : 'Hoạt động' }}
